@@ -83,7 +83,20 @@ Open:
 
 ### Provider API
 
-The easiest configuration is to copy your authorized complete OAuth header into one environment variable:
+The original OAuth values are defined in Beigi’s [`sepehrstreamgenerator/browser.py`](https://github.com/mobeigi/sepehr-stream-generator/blob/main/sepehrstreamgenerator/browser.py#L18-L22). To import those values without searching or copying them manually:
+
+```bash
+# From the parent directory of this project
+git clone https://github.com/mobeigi/sepehr-stream-generator.git
+cd iranian-tv-stream-proxy
+cp .env.example .env
+python scripts/import_upstream_oauth.py \
+  --source ../sepehr-stream-generator/sepehrstreamgenerator/browser.py
+```
+
+The importer finds the consumer key, signature, and token, writes them to `.env`, and never displays their values. Review the upstream repository and its GPL-3.0 license before using them; third-party API values may change or be revoked.
+
+You can also copy an authorized complete OAuth header into one environment variable:
 
 ```bash
 SEPEHR_OAUTH_AUTHORIZATION='OAuth oauth_consumer_key="...", oauth_nonce="...", oauth_signature="...", oauth_signature_method="HMAC-SHA1", oauth_timestamp="...", oauth_token="...", oauth_version="1.0"'
@@ -91,7 +104,7 @@ SEPEHR_OAUTH_AUTHORIZATION='OAuth oauth_consumer_key="...", oauth_nonce="...", o
 
 Alternatively, set `SEPEHR_OAUTH_CONSUMER_KEY`, `SEPEHR_OAUTH_SIGNATURE`, and `SEPEHR_OAUTH_TOKEN` separately; the proxy generates the nonce and timestamp for each request.
 
-The OAuth values used by the original implementation can be found in [`mobeigi/sepehr-stream-generator`](https://github.com/mobeigi/sepehr-stream-generator/blob/main/sepehrstreamgenerator/browser.py). They are not duplicated here because they belong to a third-party service and may change or be revoked. Only use credentials you are authorized to use.
+Only use credentials you are authorized to use. `.env` is excluded from Git and must remain private.
 
 ### Official-player fallback
 
