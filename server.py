@@ -62,6 +62,9 @@ SEPEHR_API_ALL_URL = (
     "https://sepehrapi.sepehrtv.ir/v3/channels/1"
     "?page_size=1000&page=1&include_media_resources=true&include_details=true"
 )
+SEPEHR_OAUTH_AUTHORIZATION = os.environ.get(
+    "SEPEHR_OAUTH_AUTHORIZATION", ""
+).strip()
 SEPEHR_OAUTH_CONSUMER_KEY = os.environ.get("SEPEHR_OAUTH_CONSUMER_KEY", "").strip()
 SEPEHR_OAUTH_SIGNATURE = os.environ.get("SEPEHR_OAUTH_SIGNATURE", "").strip()
 SEPEHR_OAUTH_TOKEN = os.environ.get("SEPEHR_OAUTH_TOKEN", "").strip()
@@ -466,6 +469,8 @@ def _rank_playlist(url: str) -> int:
 
 def _oauth_authorization() -> str | None:
     """Build the provider API header without embedding credentials in source."""
+    if SEPEHR_OAUTH_AUTHORIZATION:
+        return SEPEHR_OAUTH_AUTHORIZATION
     if not all(
         (SEPEHR_OAUTH_CONSUMER_KEY, SEPEHR_OAUTH_SIGNATURE, SEPEHR_OAUTH_TOKEN)
     ):

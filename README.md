@@ -83,7 +83,15 @@ Open:
 
 ### Provider API
 
-Set `SEPEHR_OAUTH_CONSUMER_KEY`, `SEPEHR_OAUTH_SIGNATURE`, and `SEPEHR_OAUTH_TOKEN` in the environment. Credentials are intentionally excluded from this repository.
+The easiest configuration is to copy your authorized complete OAuth header into one environment variable:
+
+```bash
+SEPEHR_OAUTH_AUTHORIZATION='OAuth oauth_consumer_key="...", oauth_nonce="...", oauth_signature="...", oauth_signature_method="HMAC-SHA1", oauth_timestamp="...", oauth_token="...", oauth_version="1.0"'
+```
+
+Alternatively, set `SEPEHR_OAUTH_CONSUMER_KEY`, `SEPEHR_OAUTH_SIGNATURE`, and `SEPEHR_OAUTH_TOKEN` separately; the proxy generates the nonce and timestamp for each request.
+
+The OAuth values used by the original implementation can be found in [`mobeigi/sepehr-stream-generator`](https://github.com/mobeigi/sepehr-stream-generator/blob/main/sepehrstreamgenerator/browser.py). They are not duplicated here because they belong to a third-party service and may change or be revoked. Only use credentials you are authorized to use.
 
 ### Official-player fallback
 
