@@ -1,0 +1,19 @@
+[Unit]
+Description=Iranian TV HLS Stream Proxy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+Group=__USER__
+WorkingDirectory=__WORKDIR__
+EnvironmentFile=__WORKDIR__/.env
+ExecStart=__WORKDIR__/.venv/bin/uvicorn server:app --host 127.0.0.1 --port 8765
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

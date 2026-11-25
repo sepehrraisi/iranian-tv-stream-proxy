@@ -1,0 +1,17 @@
+Iranian TV Stream Proxy
+Copyright (c) 2026 Sepehr Raisi
+
+The Sepehr stream-resolution approach in this project was inspired by:
+
+  Sepehr Stream Generator
+  Copyright (c) Morteza Beigi and contributors
+  https://github.com/mobeigi/sepehr-stream-generator
+  Licensed under the GNU General Public License v3.0
+
+The upstream project retrieves current tokenized Sepehr stream URLs and
+generates an M3U playlist. This project adds an always-on FastAPI proxy,
+playlist and segment rewriting, browser fallback, quality controls, lazy
+fetching, bounded segment caching, single-flight requests, telemetry,
+embedded playback, and automated tests.
+
+This project is distributed under the GNU General Public License v3.0.

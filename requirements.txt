@@ -1,0 +1,7 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+httpx==0.28.1
+# Only used as a fallback resolver: opens the official embed headlessly and
+# captures the .m3u8 the player requests when the API shape changes.
+playwright==1.49.1
+pytest==8.3.4

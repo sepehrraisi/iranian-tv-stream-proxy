@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Iranian TV Live — __CHANNEL_NAME__</title>
+  <script src="/static/hls.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      font-family: system-ui, sans-serif;
+      color: #eee;
+    }
+    #wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+    video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      object-fit: contain;
+    }
+    #status {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: rgba(0,0,0,0.85);
+      text-align: center;
+      padding: 2rem;
+      z-index: 5;
+    }
+    #status.hidden { display: none; }
+    #status .spin {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #444;
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 0.6rem 1rem;
+      background: linear-gradient(rgba(0,0,0,0.7), transparent);
+      font-size: 0.9rem;
+      z-index: 6;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <div id="bar">📺 __CHANNEL_NAME__ — served by your local stream server</div>
+    <div id="status">
+      <div class="spin"></div>
+      <div id="msg">Resolving stream on the server…</div>
+    </div>
+    <video id="player" controls autoplay playsinline></video>
+  </div>
+  <script>
+    (function () {
+      const HLS_URL = "__HLS_URL__";
+      const video = document.getElementById("player");
+      const status = document.getElementById("status");
+      const msg = document.getElementById("msg");
+
+      video.muted = false;
+      video.volume = 1.0;
+
+      function show(text) {
+        msg.textContent = text;
+        status.classList.remove("hidden");
+      }
+      function hide() {
+        status.classList.add("hidden");
+      }
+
+      async function startPlayback() {
+        video.muted = false;
+        video.volume = 1.0;
+        try {
+          await video.play();
+        } catch (_) {
+          // Browsers may block unmuted autoplay — start muted, then unmute on first tap.
+          video.muted = true;
+          try { await video.play(); } catch (__) {}
+          const unmute = () => {
+            video.muted = false;
+            video.volume = 1.0;
+            video.play().catch(() => {});
+            window.removeEventListener("pointerdown", unmute);
+            window.removeEventListener("keydown", unmute);
+          };
+          window.addEventListener("pointerdown", unmute, { once: true });
+          window.addEventListener("keydown", unmute, { once: true });
+        }
+      }
+
+      async function waitForPlaylist(url, attempts) {
+        for (let i = 1; i <= attempts; i++) {
+          show("Loading stream… (" + i + "/" + attempts + ")");
+          try {
+            const res = await fetch(url, { cache: "no-store" });
+            if (res.ok) {
+              const text = await res.text();
+              if (text.includes("#EXTM3U")) return true;
+            }
+          } catch (_) {}
+          await new Promise((r) => setTimeout(r, 2000));
+        }
+        return false;
+      }
+
+      async function play() {
+        const ok = await waitForPlaylist(HLS_URL, 30);
+        if (!ok) {
+          show("Stream unavailable. Check /resolve/ and server logs.");
+          return;
+        }
+
+        show("Connecting player…");
+        if (window.Hls && Hls.isSupported()) {
+          const hls = new Hls({
+            enableWorker: true,
+            lowLatencyMode: false,
+            // Sepehr segments are ~10s — stay 4 segments (~40s) behind live edge.
+            liveSyncDurationCount: 4,
+            liveMaxLatencyDurationCount: 10,
+            maxLiveSyncPlaybackRate: 1,
+            liveDurationInfinity: true,
+            maxBufferLength: 60,
+            maxMaxBufferLength: 120,
+            backBufferLength: 30,
+            startFragPrefetch: true,
+            testBandwidth: false,
+            abrEwmaDefaultEstimate: 4_000_000,
+            fragLoadingTimeOut: 25000,
+            fragLoadingMaxRetry: 8,
+            manifestLoadingTimeOut: 15000,
+            manifestLoadingMaxRetry: 6,
+            levelLoadingMaxRetry: 6,
+          });
+          hls.loadSource(HLS_URL);
+          hls.attachMedia(video);
+          let started = false;
+          const tryStart = () => {
+            if (started) return;
+            started = true;
+            hide();
+            startPlayback();
+          };
+          hls.on(Hls.Events.MANIFEST_PARSED, tryStart);
+          hls.on(Hls.Events.FRAG_BUFFERED, tryStart);
+          hls.on(Hls.Events.ERROR, (_, data) => {
+            if (data.fatal) {
+              show("Playback error — retrying…");
+              setTimeout(play, 3000);
+            }
+          });
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = HLS_URL;
+          video.addEventListener("loadedmetadata", () => {
+            hide();
+            startPlayback();
+          }, { once: true });
+        } else {
+          show("This browser cannot play HLS.");
+        }
+      }
+
+      play();
+    })();
+  </script>
+</body>
+</html>
